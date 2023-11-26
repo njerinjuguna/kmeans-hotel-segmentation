@@ -12,7 +12,7 @@ for (col in numeric_cols_with_missing) {
   mean_val <- mean(Hoteldata[[col]], na.rm = TRUE)
   Hoteldata[[col]][is.na(Hoteldata[[col]])] <- mean_val
 }
-#The above code goes through each numeric column in your dataset that has missing values and replaces 
+#The above code goes through each numeric column in the dataset that has missing values and replaces 
 #those missing values with the mean value of the non-missing values in that column which is a common 
 #strategy for imputing missing values in numeric columns, providing a simple way to fill in the gaps 
 #in a given data.
