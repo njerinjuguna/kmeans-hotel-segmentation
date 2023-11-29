@@ -1,0 +1,149 @@
+---
+title: "K-Means-Hotel-Customers"
+author: "Joyce Njeri Njuguna"
+date: "`r Sys.Date()`"
+output: html_document
+---
+### Introduction:
+Business Intelligence (BI) projects are often perceived as technological endeavors primarily focused on implementing advanced analytics and machine learning algorithms. However, this essay argues for a paradigm shift – a business-first, technology-second perspective – where organizational alignment and strategic buy-in precede the technological aspects of BI projects. To illustrate this approach, we will delve into a specific BI project titled "K-Means-Hotel-Customers" which is all about Segmentation of Customer Preferences for Targeted Marketing Using K-means Clustering.
+
+### *Section 1:* Independent and Dependent Variables
+In this project, the dependent variable is the identified customer segments that serve as the basis for targeted marketing strategies. The independent variables include Hotel type, Price range, Location and ratings. The hypothesis posits that customers with similar preferences in these variables will form distinct segments, enabling targeted marketing. The research question explores how customer segmentation facilitates the implementation of targeted marketing strategies, leading to improved customer satisfaction and increased revenue for a travel agency.
+
+### *Section 2:* Problem Statement
+The problem identified is the lack of an efficient method to utilize customer preferences for hotel type, price range, and location at Sky touch tours travel agency, hindering the implementation of targeted marketing strategies. This problem has persisted since the launch of the relatively new travel agency. The underlying issue is the absence of a comprehensive understanding of customer preferences, impacting the agency's ability to tailor marketing strategies to meet specific customer needs. Both the travel agency and its customers seeking hotel accommodation are affected.
+The AI-driven nature of the problem is classified as a "classification problem."
+
+### *Section 3:* Proposed Solution (Data-Driven Solution in the form of a Data Product)
+The proposed data-driven solution involves utilizing algorithms such as K-Nearest Neighbors, Support Vector Machines, and Decision Trees to train the model for customer segmentation. The business requires a customer segmentation report for internal analytics, while customers seek a performance comparison report for external analytics.
+The model predicts customer segments, relying on variables such as hotel type, price range, location, reviews count, and ratings. The dataset for training the model can be obtained from  Kaggle.
+
+### Exploratory Data Analysis (Lab 1 and 2)
+Milestone 1 involves a comprehensive exploratory data analysis, focusing on descriptive statistics and inferential statistics. Descriptive statistics cover measures of frequency, central tendency, distribution, and relationship. The project aligns with this milestone by understanding customer preferences through variables like hotel type, price range, and location.
+```{r}
+library(readxl)
+# Read the Excel file
+excel_file <- "C:\\Users\\muniu\\OneDrive\\Documents\\kmeans-hotel-segmentation\\HotelDataset1.xlsx"
+Hoteldata <- read_excel(excel_file)
+# Print the first few rows of the data frame
+head(Hoteldata)
+#Number of unique values in each column
+unique_counts <- sapply(Hoteldata, function(x) length(unique(x)))
+print(unique_counts)
+data_range <- range(Hoteldata$Price)
+# Quartiles
+q1 <- quantile(Hoteldata$Price, 0.25)
+q2 <- quantile(Hoteldata$Price, 0.50)
+q3 <- quantile(Hoteldata$Price, 0.75)
+library(dplyr)
+# Summary statistics for numerical variables
+summary_stats <- Hoteldata %>%
+  select(Price, ReviewsCount, Rating) %>%
+  summary()
+# Histograms for numerical variables
+hist_price <- hist(Hoteldata$Price, main = "Distribution of Price", xlab = "Price")
+hist_reviews <- hist(Hoteldata$ReviewsCount, main = "Distribution of ReviewsCount", xlab = "ReviewsCount")
+hist_rating <- hist(Hoteldata$Rating, main = "Distribution of Rating", xlab = "Rating")
+
+# Density plots for numerical variables
+density_price <- density(Hoteldata$Price)
+plot(density_price, main = "Density Plot of Price", xlab = "Price")
+
+#Measures of relationship
+# Check for missing values in 'Price' and 'Rating'
+missing_values <- sum(is.na(Hoteldata$Price) | is.na(Hoteldata$Rating))
+
+
+
+```
+
+
+### Preprocessing and Data Transformation (Lab 3 and 4)
+Milestone 2 requires addressing issues related to preprocessing and data transformation. This includes confirming the presence of missing values, data imputation, and data transformation. In our BI project, preprocessing involves handling missing values and transforming raw data into meaningful insights for effective customer segmentation.
+
+```{r}
+# Check for missing values in the entire dataset
+missing_values <- colSums(is.na(Hoteldata))
+
+# Display the columns with missing values (if any)
+print(names(missing_values[missing_values > 0]))
+
+# Identify numeric columns with missing values
+numeric_cols_with_missing <- names(Hoteldata)[sapply(Hoteldata, is.numeric) & colSums(is.na(Hoteldata)) > 0]
+
+# Mean imputation for each numeric column with missing values
+for (col in numeric_cols_with_missing) {
+  mean_val <- mean(Hoteldata[[col]], na.rm = TRUE)
+  Hoteldata[[col]][is.na(Hoteldata[[col]])] <- mean_val
+}
+```
+
+
+
+### Training the Model (Lab 5-8)
+Milestone 3 involves training the model using various techniques such as data splitting, bootstrapping, and cross-validation. The BI project aligns with these requirements by employing K-Nearest Neighbors, Support Vector Machines, and Decision Trees for model training. Cross-validation ensures robust model performance.
+```{r}
+library(caret)
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Specifying the proportion of data to be used for testing/validation (In this case; 80% training, 20% testing)
+split_index <- createDataPartition(Hoteldata$Price, p = 0.8, list = FALSE)
+
+# Create training set
+training_data <- Hoteldata[split_index, ]
+
+# Create testing set
+testing_data <- Hoteldata[-split_index, ]
+
+# Check dimensions of training set
+dim(training_data)
+
+# Check dimensions of testing set
+dim(testing_data)
+set.seed(123)
+boot_means <- replicate(1000, mean(sample(Hoteldata$Price, replace = TRUE)))
+# Confidence interval for the mean
+mean_ci <- quantile(boot_means, c(0.025, 0.975))
+set.seed(123)
+boot_medians <- replicate(1000, median(sample(Hoteldata$Price, replace = TRUE)))
+# Confidence interval for the median
+median_ci <- quantile(boot_medians, c(0.025, 0.975))
+
+# Bootstrap for standard deviation
+set.seed(123)
+boot_sds <- replicate(1000, sd(sample(Hoteldata$Price, replace = TRUE)))
+# Confidence interval for the standard deviation
+sd_ci <- quantile(boot_sds, c(0.025, 0.975))
+
+
+```
+
+
+### Hyper-Parameter Tuning and Ensembles (Lab 9-11)
+Milestone 4 emphasizes hyper-parameter tuning and ensembles. The project aligns with this by considering methods like random/grid/manual search and exploring bagging/boosting/stacking ensembles for optimizing the model's performance.
+
+```{r}
+set.seed(123)  # for reproducibility
+trainIndex <- createDataPartition(Hoteldata$Price, p = 0.8, 
+                                  list = FALSE, 
+                                  times = 1)
+train_data <- Hoteldata[trainIndex, ]
+test_data  <- Hoteldata[-trainIndex, ]
+
+
+```
+
+
+### Consolidation (Lab 12-15)
+Milestone 5 focuses on consolidation, utilizing Plumber API to access the model and consuming its output on business-facing and customer-facing dashboards. This ensures the seamless integration of the developed model into the broader business framework, enhancing decision-making and customer satisfaction.
+
+
+### Conclusion:
+In conclusion, a business-first, technology-second perspective is crucial for the success of BI projects, particularly when implemented in R. The case study of customer segmentation for targeted marketing showcases the importance of aligning technology with business objectives. By following the lecturer's guide for R-based projects, this BI initiative ensures a comprehensive exploration of data, effective preprocessing, rigorous model training, and thoughtful consolidation into a usable API. This approach guarantees that BI projects are not just technological solutions but integral components of strategic business success, meeting the requirements outlined in the lecturer's guide for each milestone in the R-based project.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```

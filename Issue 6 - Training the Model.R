@@ -86,3 +86,71 @@ bootstrap_results <- boot(data = Hoteldata, statistic = bootstrap_function, R = 
 # Print summary of bootstrapping results
 summary(bootstrap_results)
 
+            #cross validation
+library(caret)
+numeric_cols <- c("Price", "ReviewsCount", "Rating")
+Hoteldata_numeric <- Hoteldata[, numeric_cols]
+set.seed(123)  # for reproducibility
+ctrl <- trainControl(method = "cv", number = 10)
+model <- train(Price ~ ReviewsCount + Rating, data = Hoteldata_numeric, method = "lm", trControl = ctrl)
+print(model)
+
+            #Model training for classification)
+library(caret)
+
+# Assuming your dataset is already loaded and named Hoteldata
+
+# Data preprocessing
+Hoteldata_for_model <- Hoteldata[, c("Price", "ReviewsCount", "Rating", "Type")]
+
+# Using caret's createDataPartition for stratified sampling
+set.seed(123)
+trainIndex <- createDataPartition(y = Hoteldata_for_model$Type, p = 0.8, list = FALSE)
+train_data <- Hoteldata_for_model[trainIndex, ]
+test_data <- Hoteldata_for_model[-trainIndex, ]
+
+
+
+
+
+# Train the classification model (logistic regression as an example)
+model <- train(Type ~ Price + ReviewsCount + Rating, 
+               data = train_data, 
+               method = "multinom",  # Assuming "Type" has more than two classes
+               trControl = trainControl(method = "cv", number = 10))
+
+
+                #Model performance comparison using resamples
+# Load necessary libraries
+library(caret)
+
+
+Hoteldata_for_model <- Hoteldata[, c("Price", "ReviewsCount", "Rating", "Type")]
+
+# Using createResample for stratified sampling
+set.seed(123)
+resample_idx <- createDataPartition(y = Hoteldata_for_model$Type, p = 0.8, list = FALSE)
+train_data_res <- Hoteldata_for_model[resample_idx, ]
+test_data_res <- Hoteldata_for_model[-resample_idx, ]
+
+install.packages("randomForest")
+# Train multiple models
+model_logistic <- train(Type ~ Price + ReviewsCount + Rating, data = train_data_res, method = "multinom", trControl = trainControl(method = "cv", number = 10))
+model_tree <- train(Type ~ Price + ReviewsCount + Rating, data = train_data_res, method = "rpart", trControl = trainControl(method = "cv", number = 10))
+
+# Check for missing values
+summary(train_data_res)
+
+
+
+# Combine models into a list
+models_res <- list(logistic = model_logistic, tree = model_tree)
+
+# Compare model performance
+model_resamples <- resamples(models_res)
+
+# Display summary
+summary(model_resamples)
+
+# Visualize performance
+bwplot(model_resamples)
